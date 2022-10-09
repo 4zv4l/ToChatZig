@@ -8,8 +8,9 @@ To compile simply use those two commands:
 `zig build-exe client.zig`  
 
 
-TODO:
-
+# TODO:
+- [ ] Add nonce in Protocol field
+- [ ] Add secret field in the ArrayList
 - [ ] Asymetric encryption
   - [ ] Gen keys, server allows to copy/paste public key to share w client
   - [ ] Client ask for a preshared public key
