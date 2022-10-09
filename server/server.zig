@@ -9,11 +9,10 @@ const print = std.debug.print;
 const ClientsList = std.ArrayList(Connection);
 const Clients = struct {
     list: ClientsList,
-    len: usize,
 
     pub fn show(self: *Clients) !void {
         var stdout = std.io.getStdOut().writer();
-        try stdout.print("clients: {d}\n", .{self.len});
+        try stdout.print("clients: {d}\n", .{self.list.items.len});
         for (self.list.items) |client| {
             try stdout.print("-> {any}\n", .{client.address});
         }
@@ -40,7 +39,6 @@ fn handle(client: Connection, clients: *Clients, lock: *Lock) !void {
         while (lock.tryLock()) {}
         const index = getIndexOfFd(clients.list.items, client);
         _ = clients.list.swapRemove(index);
-        clients.len -= 1;
         client.stream.close();
         clients.show() catch {};
         lock.unlock();
@@ -94,13 +92,12 @@ pub fn main() !void {
     try server.listen(addr);
     print("Listening on {s}:{}\n", .{ ip, port });
     // main loop handling clients in threads
-    var clients = Clients{ .list = ClientsList.init(allocator), .len = 0 };
+    var clients = Clients{ .list = ClientsList.init(allocator) };
     defer clients.list.deinit();
     var lock: Lock = .{};
     while (server.accept()) |client| {
         // add client to the list
         try clients.list.append(client);
-        clients.len += 1;
         try clients.show();
         const t = try std.Thread.spawn(.{}, handle, .{ client, &clients, &lock });
         t.detach();
